@@ -1,0 +1,124 @@
+import "./style.css";
+import { Project } from "#app/shared/services/projects";
+import { Brand } from "#app/shared/templates/layout";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+
+interface Sent {
+  id: string;
+  text: string;
+}
+
+interface Trigger {
+  id: string;
+  label: string;
+  code: string;
+  run: () => void;
+}
+
+declare global {
+  interface Window {
+    faultkeep?: { setUser(user: unknown): void; capture(error: unknown): void };
+  }
+}
+
+/** Thrown from a timer so it escapes to window.onerror, the way a real bug does. */
+function uncaught(fn: () => void) {
+  setTimeout(fn, 0);
+}
+
+function freshError(): Error {
+  let names = ["loadWishlist", "applyCoupon", "renderReviews", "syncCart", "trackScroll", "hydrateMenu"];
+  let n = names[Math.floor(Math.random() * names.length)];
+  let id = Math.random().toString(16).slice(2, 8);
+  let err = new Error(`Feature ${id} failed to initialize`);
+  err.stack = `Error: ${err.message}\n    at ${n}_${id} (${location.origin}/assets/feature-${id}.js:12:7)\n    at boot (${location.origin}/assets/main.js:4:3)`;
+
+  return err;
+}
+
+const TRIGGERS: Trigger[] = [
+  {
+    id: "type",
+    label: "TypeError in a click handler",
+    code: "cart.items[0].price",
+    run: () => uncaught(() => {
+      let cart: any = { items: [] };
+      cart.items[0].price.toFixed(2);
+    }),
+  },
+  {
+    id: "reference",
+    label: "ReferenceError",
+    code: "trackCheckout()",
+    run: () => uncaught(() => {
+      (window as any).trackCheckout();
+    }),
+  },
+  {
+    id: "rejection",
+    label: "Unhandled promise rejection",
+    code: "Promise.reject(new Error(...))",
+    run: () => {
+      Promise.reject(new Error("Checkout API responded 503"));
+    },
+  },
+  {
+    id: "fresh",
+    label: "A brand-new issue",
+    code: "new stack every click",
+    run: () => uncaught(() => {
+      throw freshError();
+    }),
+  },
+];
+
+function onTrigger(t: Trigger, log: Sent[]) {
+  t.run();
+  log.unshift({ id: String(Date.now()) + Math.random(), text: `${new Date().toLocaleTimeString()} · ${t.label}` });
+  log.splice(8);
+}
+
+function setDemoUser() {
+  window.faultkeep?.setUser({ id: `visitor-${Math.floor(Math.random() * 90) + 10}` });
+}
+
+<html lang="en" class="page-try" (
+  project: Project,
+  private log: Sent[] = [],
+) oninit={() => setTimeout(setDemoUser, 50)}>
+  <head>
+    <title>Test page · {project.name} · faultkeep</title>
+    <meta name="description" content="Trigger test errors">
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+    <script src="/sdk.js" data-key={project.dsnKey} data-release="try@1.0.0"></script>
+  </head>
+  <body>
+    <main class="page-shell is-form try-main">
+      <div class="stack is-lg">
+        <Brand />
+        <div class="try-head stack is-xs">
+          <h1>Test page for {project.name}</h1>
+          <p>This page runs the faultkeep snippet with the {project.name} key. Each button throws a real, uncaught error.</p>
+        </div>
+
+        <div class="try-grid">
+          <div e:for={t of TRIGGERS} class="try-card">
+            <strong>{t.label}</strong>
+            <code>{t.code}</code>
+            <button class="is-sm" onclick={() => onTrigger(t, log)}>Throw it</button>
+          </div>
+        </div>
+
+        <div e:if={log.length > 0} class="card">
+          <div class="card-body stack is-sm">
+            <strong class="text-sm">Sent</strong>
+            <ul class="try-log">
+              <li e:for={entry of log}>{entry.text}</li>
+            </ul>
+            <a href={`/projects/${project.id}`} class="text-sm">See them in Issues</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

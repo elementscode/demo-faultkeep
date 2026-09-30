@@ -1,0 +1,71 @@
+@import "#app/shared/styles/page.css";
+
+.projects-head h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  letter-spacing: -0.02em;
+}
+
+.projects-head p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--space-4);
+}
+
+.project-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.project-card:hover {
+  border-color: var(--accent-edge);
+  box-shadow: var(--shadow-sm);
+}
+
+.project-card h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.project-numbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.project-number strong {
+  display: block;
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.project-number span {
+  color: var(--ink-dim);
+  font-size: var(--text-xs);
+}
+
+.project-new {
+  max-width: 32rem;
+}
+
+.project-new .row {
+  gap: var(--space-2);
+}
+
+.project-new input {
+  flex: 1;
+  min-width: 0;
+}

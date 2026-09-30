@@ -1,0 +1,161 @@
+import "./style.css";
+import { Layout } from "#app/shared/templates/layout";
+import { Project, Member, addMember } from "#app/shared/services/projects";
+import { initials } from "#app/shared/lib/format";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+
+interface CopyState {
+  copied: string;
+}
+
+interface InviteForm {
+  email: string;
+  error: string;
+}
+
+function snippet(origin: string, key: string): string {
+  return `<script src="${origin}/sdk.js"
+        data-key="${key}"
+        data-release="web@1.0.0"></script>
+
+<script>
+  // optional: tie errors to the signed-in user
+  faultkeep.setUser({ id: "user-42", email: "user@example.com" });
+</script>`;
+}
+
+function curlExample(origin: string, key: string): string {
+  return `curl -X POST "${origin}/api/events?key=${key}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "message": "Cannot read properties of undefined (reading \\u0027id\\u0027)",
+    "stack": "TypeError: Cannot read properties of undefined\\n    at render (https://example.com/app.js:10:5)",
+    "url": "https://example.com/account",
+    "browser": "Chrome 129",
+    "release": "web@1.0.0",
+    "user": { "id": "user-42" }
+  }'`;
+}
+
+async function copy(state: CopyState, id: string, text: string) {
+  await navigator.clipboard.writeText(text);
+  state.copied = id;
+  setTimeout(() => {
+    if (state.copied === id) {
+      state.copied = "";
+    }
+  }, 1600);
+}
+
+function onInvite(projectId: string, form: InviteForm, members: Member[]) {
+  try {
+    let member = addMember(projectId, form.email);
+    if (!members.some((m) => m.id === member.id)) {
+      members.push(member);
+    }
+
+    form.email = "";
+    form.error = "";
+  } catch (err: any) {
+    form.error = err.message;
+  }
+}
+
+<html lang="en" class="page-settings" (
+  project: Project,
+  projects: Project[],
+  members: Member[],
+  origin: string,
+  private copied: CopyState = { copied: "" },
+  private invite: InviteForm = { email: "", error: "" },
+)>
+  <head>
+    <title>Setup · {project.name} · faultkeep</title>
+    <meta name="description" content={`Setup for ${project.name}`}>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout {projects} current={project} section="settings">
+      <div class="stack is-lg">
+        <div class="settings-head stack is-xs">
+          <h1>Setup &amp; DSN</h1>
+          <p>Paste the snippet into your site and uncaught errors report to {project.name}.</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="stack is-lg">
+            <section class="card">
+              <div class="card-head"><h2>DSN key</h2></div>
+              <div class="card-body stack">
+                <div class="token-row">
+                  <span class="key">Key</span>
+                  <span class="val">{project.dsnKey}</span>
+                  <button class={["copy", copied.copied === "key" && "is-copied"]} onclick={() => copy(copied, "key", project.dsnKey)}>{copied.copied === "key" ? "copied" : "copy"}</button>
+                </div>
+                <dl class="field-list">
+                  <dt>Ingest url</dt>
+                  <dd><code>{origin}/api/events</code></dd>
+                  <dt>Auth</dt>
+                  <dd>The key as <code>?key=</code>, an <code>X-Faultkeep-Key</code> header, or a <code>key</code> field in the body.</dd>
+                </dl>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head"><h2>Install</h2></div>
+              <div class="card-body stack is-lg">
+                <div class="step stack">
+                  <p class="step-title">1. Add the snippet to every page</p>
+                  <p>Put it in <code>&lt;head&gt;</code>, before your own scripts, so it catches errors thrown while they load.</p>
+                  <div class="snippet">
+                    <pre><code>{snippet(origin, project.dsnKey)}</code></pre>
+                    <button class="is-sm copy-btn" onclick={() => copy(copied, "snippet", snippet(origin, project.dsnKey))}>{copied.copied === "snippet" ? "Copied" : "Copy"}</button>
+                  </div>
+                  <p>It reports uncaught errors and unhandled promise rejections. Call <code>faultkeep.capture(error)</code> to report one you caught.</p>
+                </div>
+
+                <div class="step stack">
+                  <p class="step-title">2. Throw a test error</p>
+                  <p>Open a page that runs the snippet with this key, and trigger a few errors. Keep this tab open and watch them arrive in Issues.</p>
+                  <div class="cluster is-sm">
+                    <a class="button is-primary" href={`/try/${project.id}`} target="_blank" rel="noopener">Open the test page</a>
+                    <a class="button" href={`/projects/${project.id}`}>Go to issues</a>
+                  </div>
+                </div>
+
+                <div class="step stack">
+                  <p class="step-title">Or send an event from anywhere</p>
+                  <div class="snippet">
+                    <pre><code>{curlExample(origin, project.dsnKey)}</code></pre>
+                    <button class="is-sm copy-btn" onclick={() => copy(copied, "curl", curlExample(origin, project.dsnKey))}>{copied.copied === "curl" ? "Copied" : "Copy"}</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <aside class="card">
+            <div class="card-head"><h2>Members</h2></div>
+            <div class="card-body stack">
+              <p class="text-sm text-ink-soft">Members can triage issues and get an email when a new issue appears or a resolved one comes back.</p>
+              <ul class="member-list">
+                <li e:for={m of members} class="member row">
+                  <span class="avatar">{initials(m.name)}</span>
+                  <span class="member-who">{m.name}<span>{m.email}</span></span>
+                </li>
+              </ul>
+              <form class="stack is-sm" onsubmit={() => onInvite(project.id, invite, members)}>
+                <label for="invite" class="text-sm">Add a member by email</label>
+                <div class="add-member row">
+                  <input id="invite" type="email" value={invite.email} placeholder="teammate@company.com" class="is-sm" required>
+                  <button type="submit" class="is-sm">Add</button>
+                </div>
+                <p e:if={invite.error} class="text-sm text-danger" role="alert">{invite.error}</p>
+              </form>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </Layout>
+  </body>
+</html>

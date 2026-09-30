@@ -1,0 +1,296 @@
+import "./style.css";
+import { LiveView } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { Project, Member } from "#app/shared/services/projects";
+import { Issue, IssueStatus, ErrorEvent, IssueTag, IssueBucket, setStatus, assign } from "#app/shared/services/issues";
+import { timeAgo, compact, dateTime, initials } from "#app/shared/lib/format";
+import { parseStack } from "#app/shared/lib/stack";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+
+type Range = "24h" | "7d";
+
+interface ViewState {
+  range: Range;
+  hover: number;
+  selectedId: string;
+  raw: boolean;
+}
+
+interface Bin {
+  id: string;
+  start: Date;
+  end: Date;
+  total: number;
+}
+
+const HOUR = 60 * 60 * 1000;
+const TAG_KEYS = [
+  { id: "browser", label: "Browser" },
+  { id: "os", label: "OS" },
+  { id: "release", label: "Release" },
+  { id: "url", label: "URL" },
+];
+
+function bins(buckets: LiveView<IssueBucket>, range: Range, now: Date): Bin[] {
+  let size = range === "24h" ? HOUR : 6 * HOUR;
+  let count = range === "24h" ? 24 : 28;
+  let end = Math.floor(+now / HOUR) * HOUR + HOUR;
+  let start = end - size * count;
+  let out: Bin[] = [];
+
+  for (let i = 0; i < count; i++) {
+    let s = start + i * size;
+    out.push({ id: String(s), start: new Date(s), end: new Date(s + size), total: 0 });
+  }
+
+  for (let b of buckets) {
+    let t = +b.bucketAt;
+    if (t >= start && t < end) {
+      out[Math.floor((t - start) / size)].total += b.total;
+    }
+  }
+
+  return out;
+}
+
+/** A round top for the y axis, so the gridline labels read as whole numbers. */
+function niceMax(values: Bin[]): number {
+  let max = Math.max(1, ...values.map((b) => b.total));
+  let step = Math.pow(10, Math.floor(Math.log10(max)));
+  let nice = [1, 2, 2.5, 5, 10].map((m) => m * step).find((n) => n >= max) ?? max;
+
+  return Math.max(nice, 2);
+}
+
+function binLabel(bin: Bin, range: Range): string {
+  let day = bin.start.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  let hour = (d: Date) => d.toLocaleTimeString(undefined, { hour: "numeric" });
+
+  return range === "24h" ? `${day}, ${hour(bin.start)}` : `${day}, ${hour(bin.start)} to ${hour(bin.end)}`;
+}
+
+function tipLeft(index: number, count: number): string {
+  let pct = ((index + 0.5) / count) * 100;
+
+  if (pct < 25) {
+    return "left: 0";
+  }
+
+  if (pct > 75) {
+    return "right: 0";
+  }
+
+  return `left: ${pct}%; transform: translateX(-50%)`;
+}
+
+function tagValues(tags: LiveView<IssueTag>, key: string): { id: string; value: string; timesSeen: number; pct: number }[] {
+  let rows = tags.filter((t) => t.key === key).sort((a, b) => b.timesSeen - a.timesSeen);
+  let total = rows.reduce((n, t) => n + t.timesSeen, 0) || 1;
+
+  return rows.slice(0, 5).map((t) => ({ id: t.id, value: t.value, timesSeen: t.timesSeen, pct: Math.round((t.timesSeen / total) * 100) }));
+}
+
+function splitTitle(title: string): { type: string; rest: string } {
+  let m = title.match(/^([A-Za-z_$][\w$]*):\s(.*)$/s);
+
+  return m ? { type: m[1], rest: m[2] } : { type: "", rest: title };
+}
+
+function selected(events: LiveView<ErrorEvent>, state: ViewState): ErrorEvent | undefined {
+  return events.find((e) => e.id === state.selectedId) ?? events.at(0);
+}
+
+function onStatus(view: LiveView<Issue>, issue: Issue, status: IssueStatus) {
+  setStatus(view, issue, status);
+}
+
+function onAssign(view: LiveView<Issue>, issue: Issue, e: Event) {
+  let value = (e.target as HTMLSelectElement).value;
+  assign(view, issue, value || null);
+}
+
+function onTick(now: { value: Date }) {
+  now.value = new Date();
+}
+
+<html lang="en" class="page-issue" (
+  project: Project,
+  projects: Project[],
+  members: Member[],
+  issueView: LiveView<Issue>,
+  events: LiveView<ErrorEvent>,
+  tags: LiveView<IssueTag>,
+  buckets: LiveView<IssueBucket>,
+  private state: ViewState = { range: "7d", hover: -1, selectedId: "", raw: false } as ViewState,
+  private now: { value: Date } = { value: new Date() },
+) oninit={() => setInterval(() => onTick(now), 1000)}>
+  <head>
+    <title>{issueView.at(0)?.title ?? "Issue"} · faultkeep</title>
+    <meta name="description" content="Issue detail">
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout {projects} current={project} section="issues">
+      <div e:for={issue of issueView} class="stack is-lg">
+        <nav class="crumbs row" aria-label="Breadcrumb">
+          <a href={`/projects/${project.id}`}>{project.name}</a>
+          <span aria-hidden="true">/</span>
+          <span>Issue</span>
+        </nav>
+
+        <div class="issue-head row">
+          <div class="issue-head-main stack is-sm">
+            <h1 class="issue-h1">
+              <span e:if={splitTitle(issue.title).type} class="issue-type">{splitTitle(issue.title).type}: </span>{splitTitle(issue.title).rest}
+            </h1>
+            <div class="cluster is-sm">
+              <span e:if={issue.status === "unresolved"} class="pill is-danger"><span class="pill-dot"></span>Unresolved</span>
+              <span e:if={issue.status === "resolved"} class="pill is-success"><span class="pill-dot"></span>Resolved {timeAgo(issue.resolvedAt, now.value)}</span>
+              <span e:if={issue.status === "ignored"} class="pill"><span class="pill-dot"></span>Ignored</span>
+              <span e:if={issue.status === "unresolved" && issue.regressedAt} class="pill is-warning">Regressed {timeAgo(issue.regressedAt, now.value)}</span>
+              <span e:if={issue.culprit} class="issue-culprit">{issue.culprit}</span>
+            </div>
+          </div>
+
+          <div class="issue-actions row">
+            <select aria-label="Assignee" class="is-sm" value={issue.assigneeId ?? ""} onchange={(e) => onAssign(issueView, issue, e)}>
+              <option value="">Unassigned</option>
+              <option e:for={m of members} value={m.id}>{m.name}</option>
+            </select>
+            <button e:if={issue.status !== "resolved"} class="is-primary is-sm" onclick={() => onStatus(issueView, issue, "resolved")}>Resolve</button>
+            <button e:if={issue.status === "unresolved"} class="is-sm" onclick={() => onStatus(issueView, issue, "ignored")}>Ignore</button>
+            <button e:if={issue.status !== "unresolved"} class="is-sm" onclick={() => onStatus(issueView, issue, "unresolved")}>Reopen</button>
+          </div>
+        </div>
+
+        <div class="stat-tiles">
+          <div class="stat-tile">
+            <div class="stat-tile-label">Events</div>
+            <div class="stat-tile-value">{compact(issue.eventCount)}</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-tile-label">Users affected</div>
+            <div class="stat-tile-value">{compact(issue.userCount)}</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-tile-label">First seen</div>
+            <div class="stat-tile-value">{timeAgo(issue.firstSeen, now.value)}</div>
+            <div class="stat-tile-note">{dateTime(issue.firstSeen)}</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-tile-label">Last seen</div>
+            <div class="stat-tile-value">{timeAgo(issue.lastSeen, now.value)}</div>
+            <div class="stat-tile-note">{dateTime(issue.lastSeen)}</div>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="stack is-lg">
+            <section class="card">
+              <div class="card-head row">
+                <h2>Events over time</h2>
+                <div class="range-toggle row" role="group" aria-label="Time range">
+                  <button class={["is-sm", state.range === "24h" && "is-primary"]} aria-pressed={state.range === "24h"} onclick={() => state.range = "24h"}>24 hours</button>
+                  <button class={["is-sm", state.range === "7d" && "is-primary"]} aria-pressed={state.range === "7d"} onclick={() => state.range = "7d"}>7 days</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <EventChart bins={bins(buckets, state.range, now.value)} range={state.range} {state} />
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head row">
+                <h2>Stack trace</h2>
+                <button e:if={selected(events, state)} class="is-ghost is-sm" onclick={() => state.raw = !state.raw}>{state.raw ? "Frames" : "Raw"}</button>
+              </div>
+              <div e:if={selected(events, state)} class="card-body stack">
+                <div class="event-context cluster">
+                  <span class="pill">{dateTime(selected(events, state)!.createdAt)}</span>
+                  <span e:if={selected(events, state)!.release} class="pill">{selected(events, state)!.release}</span>
+                  <span e:if={selected(events, state)!.browser} class="pill">{selected(events, state)!.browser}</span>
+                  <span e:if={selected(events, state)!.os} class="pill">{selected(events, state)!.os}</span>
+                  <span e:if={selected(events, state)!.userKey} class="pill">user {selected(events, state)!.userKey}</span>
+                </div>
+                <code class="event-url">{selected(events, state)!.url}</code>
+                <pre e:if={state.raw || parseStack(selected(events, state)!.stack).length === 0} class="stack-raw">{selected(events, state)!.stack || selected(events, state)!.message}</pre>
+                <ol e:else class="stack-frames">
+                  <li e:for={frame of parseStack(selected(events, state)!.stack)}
+                      class={[frame.id === "0" && "is-top", frame.lib && "is-lib"]}>
+                    <span class="frame-file"><span class="frame-fn">{frame.fn}</span> {frame.file}</span>
+                    <span e:if={frame.line !== null} class="frame-loc">{frame.line}:{frame.col}</span>
+                  </li>
+                </ol>
+              </div>
+              <div e:else class="card-body">No events loaded.</div>
+            </section>
+
+            <section class="card">
+              <div class="card-head row">
+                <h2>Latest events</h2>
+                <span class="text-sm text-ink-dim">Newest first</span>
+              </div>
+              <ul class="event-list">
+                <li e:for={ev of events}>
+                  <button class={["event-row", selected(events, state)?.id === ev.id && "is-selected", +now.value - +ev.createdAt < 3000 && "is-fresh"]}
+                          onclick={() => state.selectedId = ev.id}>
+                    <span class="event-when" title={dateTime(ev.createdAt)}>{timeAgo(ev.createdAt, now.value)}</span>
+                    <span class="event-url">{ev.url.replace(/^https?:\/\/[^/]+/, "") || ev.url}</span>
+                    <span class="event-browser">{[ev.browser, ev.os].filter(Boolean).join(" · ")}</span>
+                    <span class="event-user">{ev.userKey || "anonymous"}</span>
+                  </button>
+                </li>
+              </ul>
+              <div e:if={events.hasMore} class="event-more">
+                <button class="is-sm is-ghost" onclick={() => events.more()}>Load older events</button>
+              </div>
+            </section>
+          </div>
+
+          <aside class="card">
+            <div class="card-head row">
+              <h2>Tags</h2>
+            </div>
+            <div class="card-body">
+              <div e:for={key of TAG_KEYS} class="tag-group">
+                <div class="tag-key row"><span>{key.label}</span></div>
+                <div e:for={t of tagValues(tags, key.id)} class="tag-value" title={`${t.value}: ${t.timesSeen} events`}>
+                  <span class="tag-fill" style={`width: ${t.pct}%`}></span>
+                  <span class="tag-name">{t.value}</span>
+                  <span class="tag-pct">{t.pct}%</span>
+                </div>
+                <div e:if={tagValues(tags, key.id).length === 0} class="text-sm text-ink-dim">None reported</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </Layout>
+  </body>
+</html>
+
+<EventChart (bins: Bin[], range: Range, state: ViewState)>
+  <div class="chart" onmouseleave={() => state.hover = -1}>
+    <div class="chart-plot">
+      <div class="chart-grid" aria-hidden="true">
+        <div class="chart-gridline" style="top: 0"><span>{niceMax(bins)}</span></div>
+        <div class="chart-gridline" style="top: 50%"><span>{niceMax(bins) / 2}</span></div>
+      </div>
+      <div class="chart-bars" role="img" aria-label={`Events per ${range === "24h" ? "hour" : "6 hours"}: ${bins.reduce((n, b) => n + b.total, 0)} in total`}>
+        <div e:for={bin of bins}
+             class={["chart-col", bin.total === 0 && "is-zero", state.hover === bins.indexOf(bin) && "is-hover"]}
+             onmouseenter={() => state.hover = bins.indexOf(bin)}>
+          <div class="chart-bar" style={`height: ${(bin.total / niceMax(bins)) * 100}%`}></div>
+        </div>
+      </div>
+      <div e:if={state.hover >= 0 && bins[state.hover]} class="chart-tip" style={tipLeft(state.hover, bins.length)}>
+        <strong>{bins[state.hover].total}</strong> events <span>· {binLabel(bins[state.hover], range)}</span>
+      </div>
+    </div>
+    <div class="chart-axis" aria-hidden="true">
+      <span>{range === "24h" ? "24h ago" : "7 days ago"}</span>
+      <span>{range === "24h" ? "12h ago" : "3.5 days ago"}</span>
+      <span>Now</span>
+    </div>
+  </div>
+</EventChart>

@@ -1,0 +1,51 @@
+import "./style.css";
+import { redirect, session } from "@elements/app";
+import { signout } from "#app/shared/services/auth";
+import { Project } from "#app/shared/services/projects";
+
+function onSignOut() {
+  signout();
+  redirect("/signin");
+}
+
+<Brand (size: number = 22)>
+  <a href="/" class="brand row">
+    <svg class="brand-mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="7" fill="var(--accent)"/>
+      <path d="M9 7h14v5H14v3h7v5h-7v5H9z" fill="var(--accent-ink)"/>
+      <path d="M19 14l3 3-2 2 3 4" stroke="var(--danger-300)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="brand-name">faultkeep</span>
+  </a>
+</Brand>
+
+<Layout (projects: Project[], current: Project | null, section: string)>
+  <div class="app layout">
+    <header class="topbar">
+      <div class="topbar-inner row">
+        <div class="topbar-left row">
+          <Brand />
+          <nav class="project-switch row" aria-label="Projects">
+            <a e:for={p of projects}
+               href={`/projects/${p.id}`}
+               class={[current?.id === p.id && "is-active"]}>{p.name}</a>
+            <a href="/projects" class={[section === "projects" && "is-active"]}>All projects</a>
+          </nav>
+        </div>
+        <div class="topbar-user row">
+          <span class="user-name">{session.get("userName")}</span>
+          <button class="is-ghost is-sm" onclick={() => onSignOut()}>Sign out</button>
+        </div>
+      </div>
+      <nav e:if={current} class="subnav tabs" aria-label="Project">
+        <div class="tab-list">
+          <a href={`/projects/${current!.id}`} class={["tab", section === "issues" && "is-active"]}>Issues</a>
+          <a href={`/projects/${current!.id}/settings`} class={["tab", section === "settings" && "is-active"]}>Setup &amp; DSN</a>
+        </div>
+      </nav>
+    </header>
+    <main class="layout-main">
+      <slot/>
+    </main>
+  </div>
+</Layout>

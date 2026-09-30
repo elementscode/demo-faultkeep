@@ -1,0 +1,40 @@
+import "./style.css";
+
+/**
+ * Sent to every member of a project when an issue first appears, or when a
+ * resolved issue happens again.
+ *
+ * @email
+ */
+<html (
+  kind: "new" | "regressed",
+  projectName: string,
+  title: string,
+  culprit: string,
+  url: string,
+  release: string,
+  browser: string,
+  link: string,
+)>
+  <body class="email issue-alert">
+    <div class="email-wrap">
+      <p class="alert-kind">{kind === "new" ? "New issue" : "Regression"} in {projectName}</p>
+      <h1 class="alert-title">{title}</h1>
+      <p e:if={culprit} class="alert-culprit">{culprit}</p>
+
+      <p e:if={kind === "regressed"}>This issue was marked resolved and has happened again, so it is open again.</p>
+
+      <table class="alert-facts">
+        <tr e:if={url}><td class="label">URL</td><td>{url}</td></tr>
+        <tr e:if={release}><td class="label">Release</td><td>{release}</td></tr>
+        <tr e:if={browser}><td class="label">Browser</td><td>{browser}</td></tr>
+      </table>
+
+      <p><a class="alert-button" href={link}>View the issue</a></p>
+
+      <div class="email-footer">
+        <p>Sent by faultkeep to the members of {projectName}.</p>
+      </div>
+    </div>
+  </body>
+</html>

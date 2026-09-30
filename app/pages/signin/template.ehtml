@@ -1,0 +1,102 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import { signin, DEMO_LOGINS } from "#app/shared/services/auth";
+import { Brand } from "#app/shared/templates/layout";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+
+interface SigninForm {
+  email: string;
+  password: string;
+  error: string;
+  busy: boolean;
+}
+
+function onSubmit(form: SigninForm) {
+  form.busy = true;
+
+  try {
+    signin(form.email, form.password);
+    form.error = "";
+    redirect("/");
+  } catch (err: any) {
+    form.error = err.message;
+    form.busy = false;
+  }
+}
+
+function useLogin(form: SigninForm, email: string, password: string) {
+  form.email = email;
+  form.password = password;
+  onSubmit(form);
+}
+
+<html lang="en" class="page-auth" (
+  showDemo: boolean,
+  private form: SigninForm = { email: "", password: "", error: "", busy: false },
+)>
+  <head>
+    <title>Sign in · faultkeep</title>
+    <meta name="description" content="Sign in to faultkeep, error tracking for web apps.">
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <main class="auth-main center">
+      <div class="auth-column stack is-lg">
+        <div class="auth-head stack is-sm">
+          <Brand size={30} />
+          <p>Error tracking for web apps.</p>
+        </div>
+
+        <div class="card auth-card">
+          <div class="card-body">
+            <form class="stack" onsubmit={() => onSubmit(form)}>
+              <h1>Sign in</h1>
+
+              <div e:if={form.error} class="callout is-danger" role="alert">{form.error}</div>
+
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email"
+                       name="email"
+                       type="email"
+                       value={form.email}
+                       autocomplete="email"
+                       autocapitalize="none"
+                       spellcheck={false}
+                       placeholder="you@company.com"
+                       required>
+              </div>
+
+              <div class="field">
+                <label for="password">Password</label>
+                <input id="password"
+                       name="password"
+                       type="password"
+                       value={form.password}
+                       autocomplete="current-password"
+                       required>
+              </div>
+
+              <button type="submit" class={["is-primary", "is-block", form.busy && "is-loading"]}>Sign in</button>
+            </form>
+          </div>
+        </div>
+
+        <div e:if={showDemo} class="card demo-logins">
+          <div class="card-body stack is-sm">
+            <p class="demo-title">Seeded demo logins</p>
+            <div e:for={login of DEMO_LOGINS} class="demo-login row">
+              <div class="demo-login-who">
+                <strong>{login.name}</strong>
+                <code>{login.email}</code> · <code>{login.password}</code>
+              </div>
+              <button class="is-sm" onclick={() => useLogin(form, login.email, login.password)}>Sign in as {login.name.split(" ")[0]}</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="auth-alt">New here? <a href="/signup">Create an account</a></p>
+      </div>
+    </main>
+  </body>
+</html>

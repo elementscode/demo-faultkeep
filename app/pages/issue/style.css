@@ -1,0 +1,482 @@
+@import "#app/shared/styles/page.css";
+
+.crumbs {
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.crumbs a {
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.crumbs a:hover {
+  color: var(--ink);
+}
+
+.issue-head {
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.issue-head-main {
+  min-width: 0;
+}
+
+.issue-h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+
+.issue-h1 .issue-type {
+  color: var(--danger-ink, var(--danger));
+}
+
+.issue-culprit {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.issue-actions {
+  gap: var(--space-2);
+  flex: none;
+}
+
+.issue-actions select {
+  width: auto;
+  min-width: 10rem;
+}
+
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+}
+
+.stat-tile {
+  padding: var(--space-4) var(--space-5);
+}
+
+.stat-tile + .stat-tile {
+  border-left: 1px solid var(--rule-soft);
+}
+
+.stat-tile-label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.stat-tile-value {
+  margin-top: var(--space-1);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.stat-tile-note {
+  font-size: var(--text-xs);
+  color: var(--ink-dim);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  align-items: start;
+  gap: var(--space-6);
+}
+
+.card-head {
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.card-head h2 {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.card-head .tab-list {
+  border-bottom: 0;
+}
+
+.range-toggle {
+  gap: 0;
+}
+
+.range-toggle button {
+  border-radius: 0;
+}
+
+.range-toggle button:first-child {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.range-toggle button:last-child {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin-left: -1px;
+}
+
+.chart {
+  position: relative;
+  padding-left: 2.25rem;
+}
+
+.chart-plot {
+  position: relative;
+  height: 9rem;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.chart-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.chart-gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--rule-soft);
+}
+
+.chart-gridline span {
+  position: absolute;
+  right: calc(100% + var(--space-2));
+  top: -0.6em;
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-dim);
+}
+
+.chart-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.chart-col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  cursor: default;
+}
+
+.chart-bar {
+  width: 100%;
+  min-height: 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--accent);
+  opacity: 0.85;
+  transition: height 300ms ease, opacity 120ms ease;
+}
+
+.chart-col:hover .chart-bar,
+.chart-col.is-hover .chart-bar {
+  opacity: 1;
+}
+
+.chart-col.is-zero .chart-bar {
+  height: 0;
+}
+
+.chart-tip {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  z-index: 2;
+  padding: var(--space-1-5) var(--space-2-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
+  color: var(--ink);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.chart-tip strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-tip span {
+  color: var(--ink-soft);
+}
+
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-1-5);
+  font-size: var(--text-2xs);
+  color: var(--ink-dim);
+}
+
+.stack-frames {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.stack-frames li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+}
+
+.stack-frames li + li {
+  border-top: 1px solid var(--rule-soft);
+}
+
+.stack-frames li.is-top {
+  background: color-mix(in oklab, var(--danger) 7%, var(--bg));
+}
+
+.stack-frames li.is-lib {
+  color: var(--ink-dim);
+  background: var(--bg-soft);
+}
+
+.frame-fn {
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+.is-lib .frame-fn {
+  font-weight: var(--weight-regular);
+  color: var(--ink-dim);
+}
+
+.frame-file {
+  overflow: hidden;
+  color: var(--ink-soft);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frame-loc {
+  flex: none;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.stack-raw {
+  max-height: 20rem;
+  overflow: auto;
+  margin: 0;
+  font-size: var(--text-xs);
+  white-space: pre;
+}
+
+.event-context {
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.event-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event-row {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr) 9rem 8.5rem;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2-5) var(--space-5);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  text-align: left;
+  cursor: pointer;
+  min-height: 0;
+  height: auto;
+}
+
+.event-list li + li .event-row {
+  border-top: 1px solid var(--rule-soft);
+}
+
+.event-row:hover {
+  background: var(--bg-soft);
+}
+
+.event-row.is-selected {
+  background: var(--accent-soft);
+}
+
+.event-row.is-fresh {
+  animation: event-flash 2.4s ease-out;
+}
+
+@keyframes event-flash {
+  0% {
+    background: color-mix(in oklab, var(--accent) 18%, var(--bg));
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+.event-when {
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.event-url {
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-browser,
+.event-user {
+  overflow: hidden;
+  color: var(--ink-soft);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-more {
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--rule-soft);
+}
+
+.tag-group + .tag-group {
+  margin-top: var(--space-5);
+}
+
+.tag-key {
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.tag-value {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  isolation: isolate;
+}
+
+.tag-value + .tag-value {
+  margin-top: 2px;
+}
+
+.tag-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: -1;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  transition: width 300ms ease;
+}
+
+.tag-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-pct {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 64rem) {
+  .detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 48rem) {
+  .issue-head {
+    flex-direction: column;
+  }
+
+  .issue-actions {
+    flex-wrap: wrap;
+  }
+
+  .stat-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-tile:nth-child(3) {
+    border-left: 0;
+  }
+
+  .stat-tile:nth-child(n + 3) {
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  .event-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-inline: var(--space-4);
+  }
+
+  .event-url {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .event-user {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-row.is-fresh {
+    animation: none;
+  }
+}
+
+.tag-value {
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+}
+
+@media (max-width: 48rem) {
+  .issue-h1 {
+    font-size: var(--text-xl);
+  }
+}
