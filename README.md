@@ -1,12 +1,12 @@
-![Faultkeep, an error tracker built with Elements: the Storefront project's issue list with error types, New and Regressed pills, seven-day sparklines, event and user counts, and first and last seen.](POSTER_URL)
+![Faultkeep, an error tracker built with Elements: the Storefront project's issue list with error types, New and Regressed pills, seven-day sparklines, event and user counts, and first and last seen.](https://elements.dev/demos/01a0f45b-e5ae-722d-9405-0ab9735d61ba/poster?v=ee8c86f7bfb8)
 
 # Faultkeep
 
 > A demo app built with [Elements](https://elements.dev).
 
-A paste-in snippet reports uncaught errors, grouped into issues by stack trace, with live counts, charts and tags, triage, reopening on regression and email alerts.
+A paste-in snippet reports uncaught errors, grouped by stack trace into live issues with charts, triage and email alerts.
 
-**Demo:** [Faultkeep](TBD)
+**Demo:** [Faultkeep](https://elements.dev/demos/01a0f45b-e5ae-722d-9405-0ab9735d61ba)
 
 ## Agent specs
 
