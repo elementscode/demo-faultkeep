@@ -1,0 +1,212 @@
+import "./style.css";
+import { LiveView } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { Project, Member } from "#app/shared/services/projects";
+import { Issue, IssueStatus, IssueBucket } from "#app/shared/services/issues";
+import { timeAgo, compact, initials } from "#app/shared/lib/format";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+
+type StatusFilter = IssueStatus | "all";
+type SortKey = "lastSeen" | "eventCount" | "userCount" | "firstSeen";
+
+interface ListState {
+  status: StatusFilter;
+  sort: SortKey;
+  q: string;
+  who: "anyone" | "me" | "unassigned";
+}
+
+const TABS: { id: StatusFilter; label: string }[] = [
+  { id: "unresolved", label: "Unresolved" },
+  { id: "resolved", label: "Resolved" },
+  { id: "ignored", label: "Ignored" },
+  { id: "all", label: "All" },
+];
+
+const DAY = 24 * 60 * 60 * 1000;
+const HOUR = 60 * 60 * 1000;
+const SPARK_BINS = 28;
+
+interface SparkBar {
+  id: string;
+  height: number;
+  total: number;
+}
+
+/** Events per six hours over the last week, scaled to the row's own peak. */
+function spark(buckets: LiveView<IssueBucket>, issueId: string, now: Date): SparkBar[] {
+  let size = 6 * HOUR;
+  let end = Math.floor(+now / HOUR) * HOUR + HOUR;
+  let start = end - size * SPARK_BINS;
+  let totals = new Array<number>(SPARK_BINS).fill(0);
+
+  for (let b of buckets.filter((b) => b.issueId === issueId)) {
+    let t = +b.bucketAt;
+    if (t >= start && t < end) {
+      totals[Math.floor((t - start) / size)] += b.total;
+    }
+  }
+
+  let max = Math.max(1, ...totals);
+
+  return totals.map((total, i) => ({ id: String(i), total, height: total === 0 ? 0 : Math.max(8, Math.round((total / max) * 100)) }));
+}
+
+function countFor(issues: LiveView<Issue>, status: StatusFilter): number {
+  return status === "all" ? issues.length : issues.filter((i) => i.status === status).length;
+}
+
+function visible(issues: LiveView<Issue>, state: ListState, meId: string): Issue[] {
+  let q = state.q.trim().toLowerCase();
+
+  return issues
+    .filter((i) => state.status === "all" || i.status === state.status)
+    .filter((i) => state.who === "anyone" || (state.who === "me" ? i.assigneeId === meId : !i.assigneeId))
+    .filter((i) => !q || i.title.toLowerCase().includes(q) || i.culprit.toLowerCase().includes(q))
+    .sort((a, b) => +b[state.sort] - +a[state.sort] || +b.lastSeen - +a.lastSeen);
+}
+
+function splitTitle(title: string): { type: string; rest: string } {
+  let m = title.match(/^([A-Za-z_$][\w$]*):\s(.*)$/s);
+
+  return m ? { type: m[1], rest: m[2] } : { type: "", rest: title };
+}
+
+function memberName(members: Member[], id: string | null): string {
+  return members.find((m) => m.id === id)?.name ?? "";
+}
+
+function isNew(issue: Issue, now: Date): boolean {
+  return +now - +issue.firstSeen < DAY;
+}
+
+function isRegressed(issue: Issue, now: Date): boolean {
+  return issue.status === "unresolved" && !!issue.regressedAt && +now - +issue.regressedAt < 7 * DAY;
+}
+
+function onTick(now: { value: Date }) {
+  now.value = new Date();
+}
+
+function setSort(state: ListState, sort: SortKey) {
+  state.sort = sort;
+}
+
+<html lang="en" class="page-issues" (
+  project: Project,
+  projects: Project[],
+  members: Member[],
+  meId: string,
+  issues: LiveView<Issue>,
+  buckets: LiveView<IssueBucket>,
+  private state: ListState = { status: "unresolved", sort: "lastSeen", q: "", who: "anyone" } as ListState,
+  private now: { value: Date } = { value: new Date() },
+) oninit={() => setInterval(() => onTick(now), 1000)}>
+  <head>
+    <title>Issues · {project.name} · faultkeep</title>
+    <meta name="description" content={`Issues in ${project.name}`}>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout {projects} current={project} section="issues">
+      <div class="stack is-lg">
+        <div class="issues-head row">
+          <div class="stack is-xs">
+            <h1>Issues</h1>
+            <p class="issues-sub">
+              {compact(issues.reduce((n, i) => n + i.eventCount, 0))} events across {issues.length} issues in {project.name}
+            </p>
+          </div>
+          <span class="pill is-success live-pill"><span class="pill-dot"></span>Live</span>
+        </div>
+
+        <div class="issues-toolbar row">
+          <div class="tabs">
+            <div class="tab-list" role="tablist">
+              <button e:for={tab of TABS}
+                      role="tab"
+                      aria-selected={state.status === tab.id}
+                      class={["tab", state.status === tab.id && "is-active"]}
+                      onclick={() => state.status = tab.id}>
+                {tab.label}<span class="tab-count">{countFor(issues, tab.id)}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="issues-filters row">
+            <input type="search" value={state.q} placeholder="Filter issues" aria-label="Filter issues" class="is-sm">
+            <select value={state.who} aria-label="Assignee" class="is-sm">
+              <option value="anyone">Anyone</option>
+              <option value="me">Assigned to me</option>
+              <option value="unassigned">Unassigned</option>
+            </select>
+            <select value={state.sort} aria-label="Sort by" class="is-sm">
+              <option value="lastSeen">Last seen</option>
+              <option value="eventCount">Most events</option>
+              <option value="userCount">Most users</option>
+              <option value="firstSeen">Newest</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="issue-table">
+          <div class="issue-cols" aria-hidden="true">
+            <span>Issue</span>
+            <span class="spark-col">Last 7 days</span>
+            <button class={["num", state.sort === "eventCount" && "is-active"]} onclick={() => setSort(state, "eventCount")}>Events</button>
+            <button class={["num", state.sort === "userCount" && "is-active"]} onclick={() => setSort(state, "userCount")}>Users</button>
+            <button class={["num", state.sort === "firstSeen" && "is-active"]} onclick={() => setSort(state, "firstSeen")}>First seen</button>
+            <button class={["num", state.sort === "lastSeen" && "is-active"]} onclick={() => setSort(state, "lastSeen")}>Last seen</button>
+            <span></span>
+          </div>
+
+          <ul e:if={visible(issues, state, meId).length > 0} class="issue-list">
+            <li e:for={issue of visible(issues, state, meId)}>
+              <a href={`/projects/${project.id}/issues/${issue.id}`}
+                 class={["issue-row", +now.value - +issue.lastSeen < 3000 && "is-fresh"]}>
+                <div class="issue-main">
+                  <div class="issue-title">
+                    <span e:if={splitTitle(issue.title).type} class="issue-type">{splitTitle(issue.title).type}: </span>{splitTitle(issue.title).rest}
+                  </div>
+                  <div class="issue-meta cluster">
+                    <span e:if={isNew(issue, now.value)} class="pill is-info">New</span>
+                    <span e:if={isRegressed(issue, now.value)} class="pill is-warning">Regressed</span>
+                    <span e:if={issue.status === "resolved"} class="pill is-success">Resolved</span>
+                    <span e:if={issue.status === "ignored"} class="pill">Ignored</span>
+                    <span e:if={issue.culprit} class="issue-culprit">{issue.culprit}</span>
+                  </div>
+                </div>
+                <span class="spark" aria-hidden="true">
+                  <span e:for={bar of spark(buckets, issue.id, now.value)}
+                        class={["spark-bar", bar.total === 0 && "is-zero"]}
+                        style={`height: ${bar.height}%`}></span>
+                </span>
+                <div class="issue-stats-mobile cluster is-sm">
+                  <span class="stat num"><strong>{compact(issue.eventCount)}</strong><span class="stat-label">{issue.eventCount === 1 ? " event" : " events"}</span></span>
+                  <span class="stat num"><strong>{compact(issue.userCount)}</strong><span class="stat-label">{issue.userCount === 1 ? " user" : " users"}</span></span>
+                  <span class="when"><span class="stat-label">first </span>{timeAgo(issue.firstSeen, now.value)}</span>
+                  <span class="when"><span class="stat-label">last </span>{timeAgo(issue.lastSeen, now.value)}</span>
+                </div>
+                <span class="issue-assignee">
+                  <span e:if={issue.assigneeId} class="avatar" title={`Assigned to ${memberName(members, issue.assigneeId)}`}>{initials(memberName(members, issue.assigneeId))}</span>
+                  <span e:else class="avatar is-empty" title="Unassigned"></span>
+                </span>
+              </a>
+            </li>
+          </ul>
+
+          <div e:elseif={issues.length === 0} class="issues-empty">
+            <h2>No errors yet</h2>
+            <p>Add the snippet to your site and errors will show up here as they happen.</p>
+            <p><a class="button is-primary" href={`/projects/${project.id}/settings`}>Set up the snippet</a></p>
+          </div>
+
+          <div e:else class="issues-empty">
+            <h2>Nothing here</h2>
+            <p>No {state.status === "all" ? "" : state.status} issues match these filters.</p>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  </body>
+</html>

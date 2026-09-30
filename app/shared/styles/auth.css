@@ -1,0 +1,82 @@
+
+.page-auth {
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 70%),
+    var(--bg-canvas);
+}
+
+.auth-main {
+  min-height: 100dvh;
+  padding: var(--space-12) var(--space-5);
+}
+
+.auth-column {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.auth-head .brand {
+  font-size: var(--text-xl);
+}
+
+.auth-head p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.auth-card .card-body {
+  padding: var(--space-6);
+}
+
+.auth-card h1 {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+
+.auth-alt {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.demo-logins {
+  border-style: dashed;
+  background: color-mix(in oklab, var(--bg) 70%, transparent);
+}
+
+.demo-logins .card-body {
+  padding: var(--space-4) var(--space-5);
+}
+
+.demo-title {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.demo-login {
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.demo-login-who {
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+
+.demo-login-who strong {
+  display: block;
+  color: var(--ink);
+}
+
+.demo-login-who code {
+  font-size: var(--text-xs);
+}
+
+.page-auth body {
+  background: transparent;
+}

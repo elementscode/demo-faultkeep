@@ -1,0 +1,74 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { Project, createProject } from "#app/shared/services/projects";
+import { compact } from "#app/shared/lib/format";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+
+export interface ProjectSummary {
+  id: string;
+  name: string;
+  unresolved: number;
+  events24h: number;
+  members: number;
+}
+
+interface NewProjectForm {
+  name: string;
+  error: string;
+}
+
+function onCreate(form: NewProjectForm) {
+  try {
+    let project = createProject(form.name);
+    redirect(`/projects/${project.id}/settings`);
+  } catch (err: any) {
+    form.error = err.message;
+  }
+}
+
+<html lang="en" class="page-projects" (
+  projects: Project[],
+  summaries: ProjectSummary[],
+  private form: NewProjectForm = { name: "", error: "" },
+)>
+  <head>
+    <title>Projects · faultkeep</title>
+    <meta name="description" content="Your faultkeep projects">
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <Layout {projects} current={null} section="projects">
+      <div class="stack is-xl">
+        <div class="projects-head stack is-xs">
+          <h1>Projects</h1>
+          <p>Each project has its own DSN key and its own issues.</p>
+        </div>
+
+        <div e:if={summaries.length > 0} class="project-grid">
+          <a e:for={p of summaries} class="project-card" href={`/projects/${p.id}`}>
+            <h2>{p.name}</h2>
+            <div class="project-numbers">
+              <div class="project-number"><strong>{compact(p.unresolved)}</strong><span>unresolved</span></div>
+              <div class="project-number"><strong>{compact(p.events24h)}</strong><span>events, 24h</span></div>
+              <div class="project-number"><strong>{p.members}</strong><span>{p.members === 1 ? "member" : "members"}</span></div>
+            </div>
+          </a>
+        </div>
+
+        <div e:else class="callout">You have no projects yet. Create one to get a DSN key.</div>
+
+        <form class="card project-new" onsubmit={() => onCreate(form)}>
+          <div class="card-body stack">
+            <label for="project-name"><strong>New project</strong></label>
+            <div class="row">
+              <input id="project-name" value={form.name} placeholder="Marketing site" required>
+              <button type="submit" class="is-primary">Create</button>
+            </div>
+            <p e:if={form.error} class="text-sm text-danger" role="alert">{form.error}</p>
+          </div>
+        </form>
+      </div>
+    </Layout>
+  </body>
+</html>

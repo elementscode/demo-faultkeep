@@ -1,0 +1,63 @@
+@import "#app/shared/styles/page.css";
+
+.try-main {
+  padding-block: var(--space-12);
+}
+
+.try-head h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  letter-spacing: -0.02em;
+}
+
+.try-head p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.try-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.try-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+}
+
+.try-card strong {
+  font-size: var(--text-sm);
+}
+
+.try-card code {
+  font-size: var(--text-xs);
+}
+
+.try-card button {
+  margin-top: auto;
+}
+
+.try-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.try-log li {
+  padding: var(--space-1) 0;
+}
+
+@media (max-width: 40rem) {
+  .try-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
