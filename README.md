@@ -48,7 +48,7 @@ The project server runs alongside the agent and answers as soon as a file is sav
 
 ### What shipped
 
-The app type-checks with zero errors and all 24 tests pass. Every page was checked on desktop and phone before publishing, and the snippet on a test page reported real uncaught errors that raised an issue's count on an open issue list. The repo was installed fresh from GitHub and run before the demo went live.
+The app type-checks with zero errors and all 24 tests pass. Every page was checked on desktop and phone before publishing, and the snippet on a test page reported real uncaught errors that raised an issue's count on an open issue list.
 
 Start in `app/api/ingest.ts`.
 
