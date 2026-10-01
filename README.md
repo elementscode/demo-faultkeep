@@ -36,10 +36,15 @@ Faultkeep needed an ingest endpoint and a paste-in snippet, grouping by stack tr
 ### What Elements gave the app
 
 - **An ingest endpoint and snippet.** One route takes JSON error events authenticated by the project's key, and another serves a snippet any web page can include to report uncaught errors and unhandled rejections.
+
 - **Grouping in SQL.** A database function fingerprints each event by its stack frames, then updates the issue's counts, affected users, tags and hourly chart in one call. An event on a resolved issue reopens it.
+
 - **Live issues and charts.** Issues, events, tags and chart buckets are LiveTables, and a database trigger broadcasts every ingest, so the issue list, each issue's chart and its latest events update as errors arrive.
+
 - **Triage.** Resolving, ignoring and assigning save through the issues LiveTable, which checks the user and the assignee are members of the project.
+
 - **Alert emails from a job.** A new or reopened issue schedules a job inside the ingest transaction, and it emails every project member from a template.
+
 - **Data from SQL files.** Migrations define the schema and seed two users, two projects, 15 issues and about 1,860 events over the past week, some resolved, some ignored and one reopened. The project server applied each one as soon as it was saved.
 
 ### What the project server gave the agent
