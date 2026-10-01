@@ -29,6 +29,29 @@ issue list is open in another tab. Events go to `POST /api/events` with the
 key in `?key=`, an `X-Faultkeep-Key` header, or the body. In development,
 alert emails are written to `.elements/logs/job.log` instead of being sent.
 
+## How it's built
+
+Faultkeep needed an ingest endpoint and a paste-in snippet, grouping by stack trace, live issue lists and charts, triage, and alert emails. Each of those is a part of Elements, so the agent spent its 32 minutes on error tracking itself.
+
+### What Elements gave the app
+
+- **An ingest endpoint in one route.** `app/api/ingest.ts` answers `POST /api/events`, reads the project's key from a header, the query or the body, and accepts the snippet's plain-text posts. `app/api/sdk.ts` serves the snippet at `/sdk.js`, which reports uncaught errors and unhandled rejections from any page.
+- **Grouping in SQL.** The `ingestEvent` function in the schema migration fingerprints each event by its stack frames, then updates the issue's counts, affected users, tags and hourly buckets in one call. An event on a resolved issue reopens it and marks it regressed.
+- **Live issues and charts.** `issues`, `events`, `issueTags` and two bucket tables are LiveTables in `app/shared/services/issues.ts` with pinned channels, and a trigger notifies them on every ingest. The issue list, each issue's chart and its latest events update as errors arrive.
+- **Triage through the table.** Resolve, ignore and assign go through the `update` handler of `issues`, which checks the user belongs to the project and that an assignee is a member.
+- **Alert email from a job.** `ingestEvent` in `app/api/ingest.ts` schedules `NotifyIssueJob` inside the ingest transaction for a new or regressed issue, and the job emails every project member with the `issue-alert` template.
+- **Data from SQL files.** Two migrations define the schema and seed two users, two projects, 15 issues and about 1,860 events over the past week, some resolved, some ignored and one regressed. The project server applied each one as soon as it was saved.
+
+### What the project server gave the agent
+
+The project server runs alongside the agent and answers as soon as a file is saved: it type-checks the templates, TypeScript and SQL, applies migrations and reruns the tests, so every question came back right away and the agent kept building.
+
+### What shipped
+
+The app type-checks with zero errors and all 24 tests pass. Every page was checked on desktop and phone before publishing, and the snippet on a test page reported real uncaught errors that raised an issue's count on an open issue list. The repo was installed fresh from GitHub and run before the demo went live.
+
+Start in `app/api/ingest.ts`.
+
 ## Seed data and demo accounts
 
 The seed creates two projects, Storefront and Admin Dashboard, with 15 issues
