@@ -35,12 +35,12 @@ Faultkeep needed an ingest endpoint and a paste-in snippet, grouping by stack tr
 
 ### What Elements gave the app
 
-- **An ingest endpoint in one route.** `app/api/ingest.ts` answers `POST /api/events`, reads the project's key from a header, the query or the body, and accepts the snippet's plain-text posts. `app/api/sdk.ts` serves the snippet at `/sdk.js`, which reports uncaught errors and unhandled rejections from any page.
-- **Grouping in SQL.** The `ingestEvent` function in the schema migration fingerprints each event by its stack frames, then updates the issue's counts, affected users, tags and hourly buckets in one call. An event on a resolved issue reopens it and marks it regressed.
-- **Live issues and charts.** `issues`, `events`, `issueTags` and two bucket tables are LiveTables in `app/shared/services/issues.ts` with pinned channels, and a trigger notifies them on every ingest. The issue list, each issue's chart and its latest events update as errors arrive.
-- **Triage through the table.** Resolve, ignore and assign go through the `update` handler of `issues`, which checks the user belongs to the project and that an assignee is a member.
-- **Alert email from a job.** `ingestEvent` in `app/api/ingest.ts` schedules `NotifyIssueJob` inside the ingest transaction for a new or regressed issue, and the job emails every project member with the `issue-alert` template.
-- **Data from SQL files.** Two migrations define the schema and seed two users, two projects, 15 issues and about 1,860 events over the past week, some resolved, some ignored and one regressed. The project server applied each one as soon as it was saved.
+- **An ingest endpoint and snippet.** One route takes JSON error events authenticated by the project's key, and another serves a snippet any web page can include to report uncaught errors and unhandled rejections.
+- **Grouping in SQL.** A database function fingerprints each event by its stack frames, then updates the issue's counts, affected users, tags and hourly chart in one call. An event on a resolved issue reopens it.
+- **Live issues and charts.** Issues, events, tags and chart buckets are LiveTables, and a database trigger broadcasts every ingest, so the issue list, each issue's chart and its latest events update as errors arrive.
+- **Triage.** Resolving, ignoring and assigning save through the issues LiveTable, which checks the user and the assignee are members of the project.
+- **Alert emails from a job.** A new or reopened issue schedules a job inside the ingest transaction, and it emails every project member from a template.
+- **Data from SQL files.** Migrations define the schema and seed two users, two projects, 15 issues and about 1,860 events over the past week, some resolved, some ignored and one reopened. The project server applied each one as soon as it was saved.
 
 ### What the project server gave the agent
 
@@ -49,8 +49,6 @@ The project server runs alongside the agent and answers as soon as a file is sav
 ### What shipped
 
 The app type-checks with zero errors and all 24 tests pass. Every page works on desktop and phone, and live updates arrive as errors come in, such as an uncaught error on a page with the snippet raising its issue's count on an open issue list.
-
-Start in `app/api/ingest.ts`.
 
 ## Seed data and demo accounts
 
