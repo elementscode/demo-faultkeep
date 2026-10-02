@@ -10,9 +10,6 @@ A paste-in snippet reports uncaught errors, grouped by stack trace into live iss
 
 ## Agent specs
 
-What one run of the prompt below took, from an empty Elements project to this
-app.
-
 - **Agent:** Claude Code, Opus 5.5 Medium
 - **Time:** 32 min
 - **Cost:** $8.16 at API rates, September 2026
@@ -69,28 +66,7 @@ them.
 | ada@faultkeep.test   | Ada Lovelace |
 | grace@faultkeep.test | Grace Hopper |
 
-## The prompt
-
-```text
-Build an error tracker named faultkeep for web apps.
-
-- Accounts and projects. Each project has a DSN key.
-- An ingest endpoint that accepts JSON error events (message, stack trace,
-  url, browser, release, user) authenticated by the key, and a small snippet
-  to paste into a web page that reports uncaught errors to it.
-- Group events into issues by stack trace. Issue list: count, users affected,
-  first and last seen, sorted by last seen or frequency.
-- Issue detail: the stack trace, a chart of events over time, tags, and the
-  latest events.
-- Resolve, ignore, or assign an issue. A resolved issue that happens again
-  reopens.
-- Email when a new issue appears or a resolved one comes back.
-
-Seed two users, two projects, and a week of events across about fifteen
-issues. Show the seeded logins on the sign-in page.
-
-New events and issues appear in real time.
-```
+**Demo:** [Faultkeep](https://elements.dev/demos/01a0f45b-e5ae-722d-9405-0ab9735d61ba)
 
 ## License
 
