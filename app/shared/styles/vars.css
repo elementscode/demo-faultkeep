@@ -13,10 +13,8 @@
     --brand-950: oklch(0.14 0.033 275);
     --accent: var(--brand-600);
     --accent-deep: var(--brand-700);
-    --accent-soft: var(--brand-100);
+    --accent-soft: var(--brand-50);
     --accent-edge: var(--brand-200);
-    --link-c: 0.123;
-    --link-h: 275;
   }
 
   @media (prefers-color-scheme: dark) {
