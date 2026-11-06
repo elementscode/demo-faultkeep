@@ -6,6 +6,8 @@
 
 A paste-in snippet reports uncaught errors, grouped by stack trace into live issues with charts, triage and email alerts.
 
+Faultkeep uses the `coder` theme from @elements/ui.
+
 [Run this app on your machine](https://elements.dev/demos/01a0f45b-e5ae-722d-9405-0ab9735d61ba). Use this demo as inspiration, or as the starting point for your own app. Your agent creates a new app with this one as the scaffold, and you prompt it to add whatever features you want.
 
 Open a project's **Setup & DSN** page for its key, the snippet and a curl
