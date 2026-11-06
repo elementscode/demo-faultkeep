@@ -42,7 +42,7 @@
   padding: var(--space-4) var(--space-5);
   padding-right: 6rem;
   overflow-x: auto;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-surface);
   font-size: var(--text-xs);
   line-height: var(--leading-relaxed);
   white-space: pre;

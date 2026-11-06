@@ -53,7 +53,7 @@
 
 .issue-table {
   border: 1px solid var(--rule);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-surface);
   background: var(--bg);
   overflow: hidden;
 }
