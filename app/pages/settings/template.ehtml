@@ -1,7 +1,6 @@
 import "./style.css";
 import { Layout } from "#app/shared/templates/layout";
 import { Project, Member, addMember } from "#app/shared/services/projects";
-import { Alert } from "@elements/ui/alert";
 import { Avatar } from "@elements/ui/avatar";
 import { Button } from "@elements/ui/button";
 import { Card, CardContent } from "@elements/ui/card";
@@ -147,13 +146,12 @@ function onInvite(projectId: string, form: InviteForm, members: Member[]) {
                 </li>
               </ul>
               <form class="stack is-sm" onsubmit={() => onInvite(project.id, invite, members)}>
-                <Field label="Add a member by email" required>
+                <Field label="Add a member by email" error={invite.error} reserveError={false} required>
                   <div class="add-member row">
                     <Input type="email" value={invite.email} placeholder="teammate@company.com" size="sm" />
                     <Button type="submit" size="sm">Add</Button>
                   </div>
                 </Field>
-                <Alert e:if={invite.error} variant="danger" description={invite.error} />
               </form>
             </CardContent>
           </Card>
