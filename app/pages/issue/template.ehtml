@@ -23,11 +23,11 @@ interface ViewState {
   raw: boolean;
 }
 
-type Bin = {
+interface Bin {
   id: string;
   label: string;
   total: number;
-};
+}
 
 const HOUR = 60 * 60 * 1000;
 const CHART: ChartConfig = {
@@ -207,7 +207,7 @@ function onTick(now: { value: Date }) {
                           class="event-chart"
                           label={`Events per ${state.range === "24h" ? "hour" : "6 hours"}`}
                           valueAxis={{ allowDecimals: false, tickCount: 3 }}
-                          categoryAxis={{ ticks: ticks(bins(buckets, state.range, now.value), state.range), interval: 0, tickFormatter: (v) => tick(String(v), state.range) }}
+                          categoryAxis={{ ticks: ticks(bins(buckets, state.range, now.value), state.range), tickFormatter: (v) => tick(String(v), state.range) }}
                           tooltip={{ labelFormatter: (_label, row) => String(row.label) }} />
               </CardContent>
             </Card>
