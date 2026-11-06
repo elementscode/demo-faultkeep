@@ -4,6 +4,12 @@ import { Layout } from "#app/shared/templates/layout";
 import { Project, createProject } from "#app/shared/services/projects";
 import { compact } from "#app/shared/lib/format";
 import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Alert } from "@elements/ui/alert";
+import { Button } from "@elements/ui/button";
+import { Card, CardContent } from "@elements/ui/card";
+import { Empty } from "@elements/ui/empty";
+import { Field } from "@elements/ui/field";
+import { Input } from "@elements/ui/input";
 
 export interface ProjectSummary {
   id: string;
@@ -46,27 +52,33 @@ function onCreate(form: NewProjectForm) {
         </div>
 
         <div e:if={summaries.length > 0} class="project-grid">
-          <a e:for={p of summaries} class="project-card" href={`/projects/${p.id}`}>
-            <h2>{p.name}</h2>
-            <div class="project-numbers">
-              <div class="project-number"><strong>{compact(p.unresolved)}</strong><span>unresolved</span></div>
-              <div class="project-number"><strong>{compact(p.events24h)}</strong><span>events, 24h</span></div>
-              <div class="project-number"><strong>{p.members}</strong><span>{p.members === 1 ? "member" : "members"}</span></div>
-            </div>
+          <a e:for={p of summaries} class="project-link" href={`/projects/${p.id}`}>
+            <Card title={p.name} level={2}>
+              <CardContent>
+                <div class="project-numbers">
+                  <div class="project-number"><strong>{compact(p.unresolved)}</strong><span>unresolved</span></div>
+                  <div class="project-number"><strong>{compact(p.events24h)}</strong><span>events, 24h</span></div>
+                  <div class="project-number"><strong>{p.members}</strong><span>{p.members === 1 ? "member" : "members"}</span></div>
+                </div>
+              </CardContent>
+            </Card>
           </a>
         </div>
 
-        <div e:else class="callout">You have no projects yet. Create one to get a DSN key.</div>
+        <Empty e:else variant="outline" title="No projects yet" description="You have no projects yet. Create one to get a DSN key." />
 
-        <form class="card project-new" onsubmit={() => onCreate(form)}>
-          <div class="card-body stack">
-            <label for="project-name"><strong>New project</strong></label>
-            <div class="row">
-              <input id="project-name" value={form.name} placeholder="Marketing site" required>
-              <button type="submit" class="is-primary">Create</button>
-            </div>
-            <p e:if={form.error} class="text-sm text-danger" role="alert">{form.error}</p>
-          </div>
+        <form class="project-new" onsubmit={() => onCreate(form)}>
+          <Card>
+            <CardContent class="stack is-sm">
+              <Field label="New project" required>
+                <div class="row">
+                  <Input value={form.name} placeholder="Marketing site" />
+                  <Button type="submit" variant="primary">Create</Button>
+                </div>
+              </Field>
+              <Alert e:if={form.error} variant="danger" description={form.error} />
+            </CardContent>
+          </Card>
         </form>
       </div>
     </Layout>
