@@ -2,6 +2,8 @@ import "./style.css";
 import { redirect, session } from "@elements/app";
 import { signout } from "#app/shared/services/auth";
 import { Project } from "#app/shared/services/projects";
+import { Button } from "@elements/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@elements/ui/tabs";
 
 function onSignOut() {
   signout();
@@ -34,14 +36,16 @@ function onSignOut() {
         </div>
         <div class="topbar-user row">
           <span class="user-name">{session.get("userName")}</span>
-          <button class="is-ghost is-sm" onclick={() => onSignOut()}>Sign out</button>
+          <Button variant="ghost" size="sm" onclick={() => onSignOut()}>Sign out</Button>
         </div>
       </div>
-      <nav e:if={current} class="subnav tabs" aria-label="Project">
-        <div class="tab-list">
-          <a href={`/projects/${current!.id}`} class={["tab", section === "issues" && "is-active"]}>Issues</a>
-          <a href={`/projects/${current!.id}/settings`} class={["tab", section === "settings" && "is-active"]}>Setup &amp; DSN</a>
-        </div>
+      <nav e:if={current} class="subnav" aria-label="Project">
+        <Tabs value={section}>
+          <TabsList label="Project">
+            <TabsTrigger value="issues" href={`/projects/${current!.id}`}>Issues</TabsTrigger>
+            <TabsTrigger value="settings" href={`/projects/${current!.id}/settings`}>Setup &amp; DSN</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </nav>
     </header>
     <main class="layout-main">
