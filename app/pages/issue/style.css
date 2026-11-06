@@ -1,20 +1,5 @@
 @import "#app/shared/styles/page.css";
 
-.crumbs {
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--ink-dim);
-}
-
-.crumbs a {
-  color: var(--ink-soft);
-  text-decoration: none;
-}
-
-.crumbs a:hover {
-  color: var(--ink);
-}
-
 .issue-head {
   justify-content: space-between;
   align-items: flex-start;
@@ -48,8 +33,7 @@
   flex: none;
 }
 
-.issue-actions select {
-  width: auto;
+.issue-assign {
   min-width: 10rem;
 }
 
@@ -98,133 +82,11 @@
 }
 
 .card-head {
-  justify-content: space-between;
-  gap: var(--space-3);
+  align-items: center;
 }
 
-.card-head h2 {
-  margin: 0;
-  font-size: var(--text-md);
-}
-
-.card-head .tab-list {
-  border-bottom: 0;
-}
-
-.range-toggle {
-  gap: 0;
-}
-
-.range-toggle button {
-  border-radius: 0;
-}
-
-.range-toggle button:first-child {
-  border-radius: var(--radius-md) 0 0 var(--radius-md);
-}
-
-.range-toggle button:last-child {
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  margin-left: -1px;
-}
-
-.chart {
-  position: relative;
-  padding-left: 2.25rem;
-}
-
-.chart-plot {
-  position: relative;
-  height: 9rem;
-  border-bottom: 1px solid var(--rule-strong);
-}
-
-.chart-grid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.chart-gridline {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-top: 1px solid var(--rule-soft);
-}
-
-.chart-gridline span {
-  position: absolute;
-  right: calc(100% + var(--space-2));
-  top: -0.6em;
-  font-size: var(--text-2xs);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-dim);
-}
-
-.chart-bars {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.chart-col {
-  position: relative;
-  flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  cursor: default;
-}
-
-.chart-bar {
-  width: 100%;
-  min-height: 0;
-  border-radius: 4px 4px 0 0;
-  background: var(--accent);
-  opacity: 0.85;
-  transition: height 300ms ease, opacity 120ms ease;
-}
-
-.chart-col:hover .chart-bar,
-.chart-col.is-hover .chart-bar {
-  opacity: 1;
-}
-
-.chart-col.is-zero .chart-bar {
-  height: 0;
-}
-
-.chart-tip {
-  position: absolute;
-  bottom: calc(100% + var(--space-2));
-  z-index: 2;
-  padding: var(--space-1-5) var(--space-2-5);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-md);
-  background: var(--bg-elevated);
-  box-shadow: var(--shadow-md);
-  color: var(--ink);
-  font-size: var(--text-xs);
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-.chart-tip strong {
-  font-variant-numeric: tabular-nums;
-}
-
-.chart-tip span {
-  color: var(--ink-soft);
-}
-
-.chart-axis {
-  display: flex;
-  justify-content: space-between;
-  margin-top: var(--space-1-5);
-  font-size: var(--text-2xs);
-  color: var(--ink-dim);
+.event-chart {
+  height: 11rem;
 }
 
 .stack-frames {
@@ -450,13 +312,20 @@
   }
 
   .event-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
     padding-inline: var(--space-4);
   }
 
   .event-url {
-    grid-column: 1 / -1;
-    grid-row: 1;
+    flex: 1 1 100%;
+    order: -1;
+  }
+
+  .event-browser {
+    flex: 1;
+    min-width: 0;
   }
 
   .event-user {
