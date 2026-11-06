@@ -318,7 +318,7 @@
     padding-inline: var(--space-4);
   }
 
-  .event-url {
+  .event-row .event-url {
     flex: 1 1 100%;
     order: -1;
   }
