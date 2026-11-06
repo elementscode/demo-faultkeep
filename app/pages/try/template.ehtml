@@ -2,6 +2,8 @@ import "./style.css";
 import { Project } from "#app/shared/services/projects";
 import { Brand } from "#app/shared/templates/layout";
 import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { Button } from "@elements/ui/button";
+import { Card, CardContent } from "@elements/ui/card";
 
 interface Sent {
   id: string;
@@ -102,22 +104,24 @@ function setDemoUser() {
         </div>
 
         <div class="try-grid">
-          <div e:for={t of TRIGGERS} class="try-card">
-            <strong>{t.label}</strong>
-            <code>{t.code}</code>
-            <button class="is-sm" onclick={() => onTrigger(t, log)}>Throw it</button>
-          </div>
+          <Card e:for={t of TRIGGERS} size="sm">
+            <CardContent class="try-card">
+              <strong>{t.label}</strong>
+              <code>{t.code}</code>
+              <Button size="sm" onclick={() => onTrigger(t, log)}>Throw it</Button>
+            </CardContent>
+          </Card>
         </div>
 
-        <div e:if={log.length > 0} class="card">
-          <div class="card-body stack is-sm">
+        <Card e:if={log.length > 0}>
+          <CardContent class="stack is-sm">
             <strong class="text-sm">Sent</strong>
             <ul class="try-log">
               <li e:for={entry of log}>{entry.text}</li>
             </ul>
             <a href={`/projects/${project.id}`} class="text-sm">See them in Issues</a>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </main>
   </body>

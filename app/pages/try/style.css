@@ -26,10 +26,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-2);
-  padding: var(--space-4);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-lg);
-  background: var(--bg);
+  height: 100%;
 }
 
 .try-card strong {
@@ -40,7 +37,7 @@
   font-size: var(--text-xs);
 }
 
-.try-card button {
+.try-card .button {
   margin-top: auto;
 }
 
