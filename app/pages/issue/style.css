@@ -81,10 +81,6 @@
   gap: var(--space-6);
 }
 
-.card-head {
-  align-items: center;
-}
-
 .event-chart {
   height: 11rem;
 }

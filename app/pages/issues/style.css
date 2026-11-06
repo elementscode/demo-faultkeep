@@ -79,8 +79,11 @@
 }
 
 .issue-cols button {
+  min-height: 0;
+  height: auto;
   padding: 0;
   border: 0;
+  box-shadow: none;
   background: none;
   color: inherit;
   font: inherit;
@@ -272,7 +275,6 @@
     display: inline;
     color: var(--ink-dim);
   }
-
 }
 
 @media (min-width: 52.01rem) {
@@ -286,12 +288,6 @@
   .issue-row.is-fresh {
     animation: none;
   }
-}
-
-.issue-cols button {
-  min-height: 0;
-  height: auto;
-  box-shadow: none;
 }
 
 /* A tablet has room for the sparkline beside the title. */
