@@ -39,10 +39,6 @@
   flex-wrap: wrap;
 }
 
-.issues-toolbar .tab-list {
-  border-bottom: 0;
-}
-
 .tab-count {
   margin-inline-start: var(--space-1-5);
   color: var(--ink-dim);
@@ -54,13 +50,6 @@
   gap: var(--space-2);
 }
 
-.issues-filters input {
-  width: 14rem;
-}
-
-.issues-filters select {
-  width: auto;
-}
 
 .issue-table {
   border: 1px solid var(--rule);
@@ -173,10 +162,6 @@
   text-overflow: ellipsis;
 }
 
-.issue-meta .pill {
-  font-size: var(--text-2xs);
-}
-
 .stat {
   font-size: var(--text-sm);
 }
@@ -196,25 +181,12 @@
   white-space: nowrap;
 }
 
-.avatar {
-  display: inline-grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-full);
-  background: var(--accent-soft);
-  color: var(--accent-deep);
-  font-size: var(--text-2xs);
-  font-weight: var(--weight-bold);
-}
-
-.avatar.is-empty {
-  border: 1px dashed var(--rule-strong);
-  background: none;
-}
-
 .issue-assignee {
   justify-self: end;
+}
+
+.issue-search {
+  width: 14rem;
 }
 
 .spark {
@@ -236,22 +208,10 @@
   background: var(--rule);
 }
 
-.issue-row:has(.pill.is-success) .spark-bar:not(.is-zero),
-.issue-row:has(.pill:not([class*="is-"])) .spark-bar:not(.is-zero) {
+.issue-row.is-quiet .spark-bar:not(.is-zero) {
   background: var(--rule-strong);
 }
 
-.issues-empty {
-  padding: var(--space-12) var(--space-6);
-  text-align: center;
-  color: var(--ink-soft);
-}
-
-.issues-empty h2 {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-lg);
-  color: var(--ink);
-}
 
 @media (max-width: 52rem) {
   .issue-cols,
@@ -283,6 +243,21 @@
     grid-area: stats;
   }
 
+  .issues-toolbar .tabs,
+  .issues-filters {
+    width: 100%;
+  }
+
+  .issues-filters {
+    flex-wrap: wrap;
+  }
+
+  .issue-search {
+    flex: 1 1 100%;
+    width: auto;
+    min-width: 0;
+  }
+
   .issue-assignee {
     grid-area: who;
   }
@@ -298,14 +273,6 @@
     color: var(--ink-dim);
   }
 
-  .issues-filters,
-  .issues-filters input {
-    width: 100%;
-  }
-
-  .issues-filters input {
-    flex: 1;
-  }
 }
 
 @media (min-width: 52.01rem) {
@@ -325,27 +292,6 @@
   min-height: 0;
   height: auto;
   box-shadow: none;
-}
-
-@media (max-width: 52rem) {
-  .issues-toolbar .tabs {
-    width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .issues-toolbar .tab-list {
-    flex-wrap: nowrap;
-  }
-
-  .issues-toolbar .tab {
-    padding-inline: var(--space-1-5);
-    white-space: nowrap;
-  }
-
-  .issues-toolbar .tab-count {
-    margin-inline-start: var(--space-1);
-  }
 }
 
 /* A tablet has room for the sparkline beside the title. */

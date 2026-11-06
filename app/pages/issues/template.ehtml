@@ -3,7 +3,14 @@ import { LiveView } from "@elements/app";
 import { Layout } from "#app/shared/templates/layout";
 import { Project, Member } from "#app/shared/services/projects";
 import { Issue, IssueStatus, IssueBucket } from "#app/shared/services/issues";
-import { timeAgo, compact, initials } from "#app/shared/lib/format";
+import { timeAgo, compact } from "#app/shared/lib/format";
+import { Tabs, TabsList, TabsTrigger } from "@elements/ui/tabs";
+import { NativeSelect } from "@elements/ui/native-select";
+import { Input } from "@elements/ui/input";
+import { Badge } from "@elements/ui/badge";
+import { Avatar } from "@elements/ui/avatar";
+import { Button } from "@elements/ui/button";
+import { Empty, EmptyContent } from "@elements/ui/empty";
 import favicon from "#app/shared/assets/favicons/favicon.svg";
 
 type StatusFilter = IssueStatus | "all";
@@ -117,35 +124,31 @@ function setSort(state: ListState, sort: SortKey) {
               {compact(issues.reduce((n, i) => n + i.eventCount, 0))} events across {issues.length} issues in {project.name}
             </p>
           </div>
-          <span class="pill is-success live-pill"><span class="pill-dot"></span>Live</span>
+          <Badge variant="success" dot class="live-pill">Live</Badge>
         </div>
 
         <div class="issues-toolbar row">
-          <div class="tabs">
-            <div class="tab-list" role="tablist">
-              <button e:for={tab of TABS}
-                      role="tab"
-                      aria-selected={state.status === tab.id}
-                      class={["tab", state.status === tab.id && "is-active"]}
-                      onclick={() => state.status = tab.id}>
+          <Tabs value={state.status}>
+            <TabsList label="Status">
+              <TabsTrigger e:for={tab of TABS} value={tab.id}>
                 {tab.label}<span class="tab-count">{countFor(issues, tab.id)}</span>
-              </button>
-            </div>
-          </div>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           <div class="issues-filters row">
-            <input type="search" value={state.q} placeholder="Filter issues" aria-label="Filter issues" class="is-sm">
-            <select value={state.who} aria-label="Assignee" class="is-sm">
+            <Input type="search" value={state.q} placeholder="Filter issues" size="sm" class="issue-search" attrs={{ "aria-label": "Filter issues" }} />
+            <NativeSelect value={state.who} size="sm" attrs={{ "aria-label": "Assignee" }}>
               <option value="anyone">Anyone</option>
               <option value="me">Assigned to me</option>
               <option value="unassigned">Unassigned</option>
-            </select>
-            <select value={state.sort} aria-label="Sort by" class="is-sm">
+            </NativeSelect>
+            <NativeSelect value={state.sort} size="sm" attrs={{ "aria-label": "Sort by" }}>
               <option value="lastSeen">Last seen</option>
               <option value="eventCount">Most events</option>
               <option value="userCount">Most users</option>
               <option value="firstSeen">Newest</option>
-            </select>
+            </NativeSelect>
           </div>
         </div>
 
@@ -163,16 +166,16 @@ function setSort(state: ListState, sort: SortKey) {
           <ul e:if={visible(issues, state, meId).length > 0} class="issue-list">
             <li e:for={issue of visible(issues, state, meId)}>
               <a href={`/projects/${project.id}/issues/${issue.id}`}
-                 class={["issue-row", +now.value - +issue.lastSeen < 3000 && "is-fresh"]}>
+                 class={["issue-row", issue.status !== "unresolved" && "is-quiet", +now.value - +issue.lastSeen < 3000 && "is-fresh"]}>
                 <div class="issue-main">
                   <div class="issue-title">
                     <span e:if={splitTitle(issue.title).type} class="issue-type">{splitTitle(issue.title).type}: </span>{splitTitle(issue.title).rest}
                   </div>
                   <div class="issue-meta cluster">
-                    <span e:if={isNew(issue, now.value)} class="pill is-info">New</span>
-                    <span e:if={isRegressed(issue, now.value)} class="pill is-warning">Regressed</span>
-                    <span e:if={issue.status === "resolved"} class="pill is-success">Resolved</span>
-                    <span e:if={issue.status === "ignored"} class="pill">Ignored</span>
+                    <Badge e:if={isNew(issue, now.value)} variant="info">New</Badge>
+                    <Badge e:if={isRegressed(issue, now.value)} variant="warning">Regressed</Badge>
+                    <Badge e:if={issue.status === "resolved"} variant="success">Resolved</Badge>
+                    <Badge e:if={issue.status === "ignored"} variant="outline">Ignored</Badge>
                     <span e:if={issue.culprit} class="issue-culprit">{issue.culprit}</span>
                   </div>
                 </div>
@@ -188,23 +191,20 @@ function setSort(state: ListState, sort: SortKey) {
                   <span class="when"><span class="stat-label">last </span>{timeAgo(issue.lastSeen, now.value)}</span>
                 </div>
                 <span class="issue-assignee">
-                  <span e:if={issue.assigneeId} class="avatar" title={`Assigned to ${memberName(members, issue.assigneeId)}`}>{initials(memberName(members, issue.assigneeId))}</span>
-                  <span e:else class="avatar is-empty" title="Unassigned"></span>
+                  <Avatar e:if={issue.assigneeId} size="sm" alt={memberName(members, issue.assigneeId)} attrs={{ title: `Assigned to ${memberName(members, issue.assigneeId)}` }} />
+                  <Avatar e:else size="sm" attrs={{ title: "Unassigned" }} />
                 </span>
               </a>
             </li>
           </ul>
 
-          <div e:elseif={issues.length === 0} class="issues-empty">
-            <h2>No errors yet</h2>
-            <p>Add the snippet to your site and errors will show up here as they happen.</p>
-            <p><a class="button is-primary" href={`/projects/${project.id}/settings`}>Set up the snippet</a></p>
-          </div>
+          <Empty e:elseif={issues.length === 0} title="No errors yet" description="Add the snippet to your site and errors will show up here as they happen.">
+            <EmptyContent>
+              <Button variant="primary" href={`/projects/${project.id}/settings`}>Set up the snippet</Button>
+            </EmptyContent>
+          </Empty>
 
-          <div e:else class="issues-empty">
-            <h2>Nothing here</h2>
-            <p>No {state.status === "all" ? "" : state.status} issues match these filters.</p>
-          </div>
+          <Empty e:else title="Nothing here" description={`No ${state.status === "all" ? "" : state.status + " "}issues match these filters.`} />
         </div>
       </div>
     </Layout>
