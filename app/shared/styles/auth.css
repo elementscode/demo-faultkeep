@@ -24,10 +24,6 @@
   color: var(--ink-soft);
 }
 
-.auth-card .card-body {
-  padding: var(--space-6);
-}
-
 .auth-card h1 {
   margin: 0;
   font-size: var(--text-xl);
@@ -42,10 +38,6 @@
 .demo-logins {
   border-style: dashed;
   background: color-mix(in oklab, var(--bg) 70%, transparent);
-}
-
-.demo-logins .card-body {
-  padding: var(--space-4) var(--space-5);
 }
 
 .demo-title {
